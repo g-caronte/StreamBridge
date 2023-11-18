@@ -1,9 +1,9 @@
 import asyncio
-import aiofiles
 
 from streamlink.plugin import Plugin
 from streamlink.session import Streamlink
 from streamlink.exceptions import PluginError
+from streamlink.stream.stream import Stream
 
 
 async def get_restreamer(plugin: Plugin, stream_name: str):
@@ -24,7 +24,7 @@ async def restream(plugin: Plugin, stream_name: str):
     while True:
         try:
             streams = plugin.streams()
-            stream = streams[stream_name]
+            stream: Stream = streams[stream_name]
         except PluginError as err:
             if retry == 0:
                 raise err
@@ -34,12 +34,12 @@ async def restream(plugin: Plugin, stream_name: str):
 
         retry = 3
 
-        stream_fd = async_wrap(stream.open())
+        astream = await AsyncStream(stream).open()
         try:
-            while buff := await stream_fd.read(8*1024):
+            while buff := await astream.read(8 * 1024):
                 yield buff
         finally:
-            await stream_fd.close()
+            await astream.close()
 
 
 def resolve(url, session_args=None):
@@ -49,5 +49,28 @@ def resolve(url, session_args=None):
     return pluginname, plugin
 
 
-def async_wrap(io_base):
-    return aiofiles.threadpool.AsyncBufferedIOBase(io_base, None, None)
+class AsyncStream:
+    def __init__(self, stream: Stream) -> None:
+        self.loop = asyncio.get_event_loop()
+        self.sync_stream = stream
+        self.sync_reader = None
+
+    def _arun(self, fn):
+        return self.loop.run_in_executor(None, fn)
+
+    async def read(self, size: int) -> bytes:
+        return await self._arun(lambda: self.sync_reader.read(size))
+
+    async def open(self) -> "AsyncStream":
+        await self._arun(self._open)
+        return self
+
+    async def close(self):
+        return await self._arun(self._close)
+
+    def _open(self):
+        self.sync_reader = self.sync_stream.open()
+
+    def _close(self):
+        self.sync_reader.close()
+        self.sync_reader = None
