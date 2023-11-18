@@ -4,6 +4,8 @@ import streambridge.bridge as bridge
 
 app = Quart(__name__)
 
+app.config['RESPONSE_TIMEOUT'] = 60*60*24*7
+
 DLNA_CF_HEADER = "DLNA.ORG_PN=MPEG_TS_HD_NA_MPEG1_L2_ISO;DLNA.ORG_FLAGS=8d700000000000000000000000000000;"
 DLNA_HEADERS = {"transferMode.dlna.org": "Streaming", "contentFeatures.dlna.org": DLNA_CF_HEADER}
 VIDEO_HEADERS = {"Content-Type": "video/unknwon", **DLNA_HEADERS}
