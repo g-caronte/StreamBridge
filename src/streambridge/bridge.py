@@ -42,11 +42,19 @@ async def restream(plugin: Plugin, stream_name: str):
         finally:
             await astream.close()
 
+
 @functools.cache
-def resolve(url, session_args=None):
-    sl = Streamlink(session_args)
-    pluginname, pluginclass, resolved_url = sl.resolve_url(url)
-    plugin = pluginclass(sl, resolved_url, {})
+def _resolve(url):
+    """Cached plugin resolution"""
+    return Streamlink().resolve_url(url)
+
+
+def resolve(url, params=None):
+    pluginname, pluginclass, resolved_url = _resolve(url)
+    # Apparently session doesn't forward params to plugin like cli does
+    prefix = f"{pluginname}-"
+    plugin_params = {k.replace(prefix, ""): params[k] for k in params if k.startswith(prefix)}
+    plugin = pluginclass(Streamlink(params), resolved_url, plugin_params)
     return pluginname, plugin
 
 
