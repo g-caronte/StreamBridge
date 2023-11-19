@@ -1,4 +1,5 @@
 import asyncio
+import functools
 
 from streamlink.plugin import Plugin
 from streamlink.session import Streamlink
@@ -41,7 +42,7 @@ async def restream(plugin: Plugin, stream_name: str):
         finally:
             await astream.close()
 
-
+@functools.cache
 def resolve(url, session_args=None):
     sl = Streamlink(session_args)
     pluginname, pluginclass, resolved_url = sl.resolve_url(url)
