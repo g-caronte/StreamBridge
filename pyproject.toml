@@ -18,8 +18,8 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "quart",
-  "streamlink@git+https://github.com/streamlink/streamlink",
+  "quart == 0.19.3",
+  "streamlink == 6.4.1",
   "Hypercorn == 0.15.0",
 ]
 description = 'A simple web service re-streaming streamlink streams.'
@@ -57,6 +57,9 @@ cov-report = [
 ]
 serve = [
   "cd src && hypercorn streambridge.app:app {args:} ",
+]
+serve-uv = [
+  "cd src && uvicorn streambridge.app:app {args:} ",
 ]
 serve-dev = [
   "cd src && hypercorn streambridge.app:app {args:} --reload --bind 0.0.0.0:8000 --log-level DEBUG --access-logfile - --error-logfile -",
