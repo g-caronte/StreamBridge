@@ -29,9 +29,16 @@ VIDEO_HEADERS = {"Content-Type": "video/unknwon", **DLNA_HEADERS}
 async def restream_handler(url, stream: str = "best"):
     try:
         pname, plugin = bridge.resolve(url, config)
+    except NoPluginError:
+        return {"error": {"message": "no plugin"}}, 501
+
+    try:
         restreamer = await bridge.get_restreamer(plugin, stream)
-    except (PluginError, NoPluginError) as ex:
-        return {"error": {"type": f"{type(ex).__name__}", "message": f"{ex}"}}, 501
+    except PluginError as ex:
+        return {
+            "error": {"message": f"{ex}"},
+            "plugin": pname
+        }, 501
 
     if request.method == "OPTIONS":
         return {
