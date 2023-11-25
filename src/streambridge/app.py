@@ -34,7 +34,11 @@ async def restream_handler(url, stream: str = "best"):
         return {"error": {"type": f"{type(ex).__name__}", "message": f"{ex}"}}, 501
 
     if request.method == "OPTIONS":
-        return {"plugin": pname, "streams": list(plugin.streams().keys())}, 200
+        return {
+            "plugin": pname,
+            "streams": list(plugin.streams().keys()),
+            "metadata": plugin.get_metadata()
+        }, 200
 
     return restreamer if request.method == "GET" else "", 200, VIDEO_HEADERS
 
