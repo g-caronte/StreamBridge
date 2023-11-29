@@ -18,9 +18,9 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "quart == 0.19.3",
+  "Flask == 3.0.0",
+  "gunicorn == 21.2.0",
   "streamlink == 6.4.1",
-  "Hypercorn == 0.15.0",
 ]
 description = 'A simple web service re-streaming streamlink streams.'
 dynamic = ["version"]
@@ -56,13 +56,10 @@ cov-report = [
   "coverage report",
 ]
 serve = [
-  "cd src && hypercorn streambridge.app:app {args:} ",
-]
-serve-uv = [
-  "cd src && uvicorn streambridge.app:app {args:} ",
+  "cd src && gunicorn streambridge.app:app {args:} --host 0.0.0.0 ",
 ]
 serve-dev = [
-  "cd src && hypercorn streambridge.app:app {args:} --reload --bind 0.0.0.0:8000 --log-level DEBUG --access-logfile - --error-logfile -",
+  "cd src && flask --app streambridge.app  run --reload --host 0.0.0.0 {args:} ",
 ]
 test = "pytest {args:tests}"
 test-cov = "coverage run -m pytest {args:tests}"

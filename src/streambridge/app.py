@@ -1,9 +1,9 @@
-from quart import Quart, request
+from flask import Flask, request
 from streamlink.exceptions import PluginError, NoPluginError
 
 import streambridge.bridge as bridge
 
-app = Quart(__name__)
+app = Flask(__name__)
 
 app.config['RESPONSE_TIMEOUT'] = 60 * 60 * 24 * 7
 
@@ -12,9 +12,9 @@ config = {}
 
 
 @app.route("/config", methods=["GET", "POST", "DELETE"])
-async def config_handler():
+def config_handler():
     if request.method == "POST":
-        config.update(await request.get_json(force=True))
+        config.update(request.get_json(force=True))
     elif request.method == "DELETE":
         config.clear()
     return config
@@ -26,28 +26,25 @@ VIDEO_HEADERS = {"Content-Type": "video/unknwon", **DLNA_HEADERS}
 
 
 @app.route("/<path:url>", methods=['HEAD', 'GET', 'OPTIONS'])
-async def restream_handler(url, stream: str = "best"):
+def restream_handler(url, stream: str = "best"):
     try:
         pname, plugin = bridge.resolve(url, config)
     except NoPluginError:
         return {"error": {"message": "no plugin"}}, 501
 
     try:
-        restreamer = await bridge.get_restreamer(plugin, stream)
+        restreamer = bridge.get_restreamer(plugin, stream)
     except PluginError as ex:
-        return {
-            "error": {"message": f"{ex}"},
-            "plugin": pname
-        }, 501
+        return {"error": {"message": f"{ex}"}, "plugin": pname}, 501
 
     if request.method == "OPTIONS":
-        return {
-            "plugin": pname,
-            "streams": list(plugin.streams().keys()),
-            "metadata": plugin.get_metadata()
-        }, 200
+        return {"plugin": pname, "streams": list(plugin.streams().keys()), "metadata": plugin.get_metadata()}, 200
 
-    return restreamer if request.method == "GET" else "", 200, VIDEO_HEADERS
+    return app.response_class(
+        restreamer if request.method == "GET" else "",
+        headers=VIDEO_HEADERS,
+        status=200
+    )
 
 
 if __name__ == "__main__":
