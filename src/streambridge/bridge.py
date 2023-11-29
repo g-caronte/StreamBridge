@@ -52,6 +52,7 @@ def resolve(url, params=None):
     pluginname, pluginclass, resolved_url = _resolve(url)
     # Apparently session doesn't forward params to plugin like cli does
     prefix = f"{pluginname}-"
-    plugin_params = {k.replace(prefix, ""): params[k] for k in params if k.startswith(prefix)}
+    plugin_params = {k.replace(prefix, ""): params[k] for k in (params or {}) if k.startswith(prefix)}
+
     plugin = pluginclass(Streamlink(params), resolved_url, plugin_params)
     return pluginname, plugin
