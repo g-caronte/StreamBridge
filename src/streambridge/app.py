@@ -31,15 +31,13 @@ VIDEO_HEADERS = {"Content-Type": "video/unknwon", **DLNA_HEADERS}
 def restream_handler(url, stream: str = "best"):
     try:
         pname, plugin = bridge.resolve(url, app.restream_config)
+        restreamer = bridge.get_restreamer(plugin, stream)
     except NoPluginError:
         return {"error": {"message": "no plugin"}}, 501
-
-    try:
-        restreamer = bridge.get_restreamer(plugin, stream)
     except PluginError as ex:
         return {"error": {"message": f"{ex}"}, "plugin": pname}, 501
 
     if request.method == "OPTIONS":
-        return {"plugin": pname, "streams": list(plugin.streams().keys()), "metadata": plugin.get_metadata()}, 200
+        return {"plugin": pname, "streams": list(plugin.streams().keys()), "metadata": plugin.get_metadata()}
 
-    return app.response_class(restreamer if request.method == "GET" else "", headers=VIDEO_HEADERS, status=200)
+    return app.response_class(restreamer if request.method == "GET" else "", headers=VIDEO_HEADERS)
