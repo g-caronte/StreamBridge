@@ -8,16 +8,18 @@ app = Flask(__name__)
 app.config["RESPONSE_TIMEOUT"] = 60 * 60 * 24 * 7
 
 
-config = {}
+app.restream_config = {}
 
 
-@app.route("/config", methods=["GET", "POST", "DELETE"])
+@app.route("/config", methods=["GET", "POST", "PUT", "DELETE"])
 def config_handler():
-    if request.method == "POST":
-        config.update(request.get_json(force=True))
-    elif request.method == "DELETE":
-        config.clear()
-    return config
+    if request.method in ("DELETE", "POST"):
+        app.restream_config.clear()
+
+    if request.method in ("POST", "PUT"):
+        app.restream_config.update(request.get_json(force=True))
+
+    return app.restream_config
 
 
 DLNA_CF_HEADER = "DLNA.ORG_PN=MPEG_TS_HD_NA_MPEG1_L2_ISO;DLNA.ORG_FLAGS=8d700000000000000000000000000000;"
@@ -28,7 +30,7 @@ VIDEO_HEADERS = {"Content-Type": "video/unknwon", **DLNA_HEADERS}
 @app.route("/<path:url>", methods=["HEAD", "GET", "OPTIONS"])
 def restream_handler(url, stream: str = "best"):
     try:
-        pname, plugin = bridge.resolve(url, config)
+        pname, plugin = bridge.resolve(url, app.restream_config)
     except NoPluginError:
         return {"error": {"message": "no plugin"}}, 501
 
