@@ -1,7 +1,8 @@
 from unittest import mock
-from streambridge import bridge
 
 from streamlink.plugin import Plugin
+
+from streambridge import bridge
 
 
 @mock.patch("streamlink.session.Streamlink.resolve_url")

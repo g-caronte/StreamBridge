@@ -1,9 +1,9 @@
 import functools
 from time import sleep
 
+from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
 from streamlink.session import Streamlink
-from streamlink.exceptions import PluginError
 from streamlink.stream.stream import Stream
 
 

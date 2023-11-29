@@ -1,11 +1,11 @@
 from flask import Flask, request
-from streamlink.exceptions import PluginError, NoPluginError
+from streamlink.exceptions import NoPluginError, PluginError
 
-import streambridge.bridge as bridge
+from streambridge import bridge
 
 app = Flask(__name__)
 
-app.config['RESPONSE_TIMEOUT'] = 60 * 60 * 24 * 7
+app.config["RESPONSE_TIMEOUT"] = 60 * 60 * 24 * 7
 
 
 config = {}
@@ -25,7 +25,7 @@ DLNA_HEADERS = {"transferMode.dlna.org": "Streaming", "contentFeatures.dlna.org"
 VIDEO_HEADERS = {"Content-Type": "video/unknwon", **DLNA_HEADERS}
 
 
-@app.route("/<path:url>", methods=['HEAD', 'GET', 'OPTIONS'])
+@app.route("/<path:url>", methods=["HEAD", "GET", "OPTIONS"])
 def restream_handler(url, stream: str = "best"):
     try:
         pname, plugin = bridge.resolve(url, config)
@@ -40,12 +40,4 @@ def restream_handler(url, stream: str = "best"):
     if request.method == "OPTIONS":
         return {"plugin": pname, "streams": list(plugin.streams().keys()), "metadata": plugin.get_metadata()}, 200
 
-    return app.response_class(
-        restreamer if request.method == "GET" else "",
-        headers=VIDEO_HEADERS,
-        status=200
-    )
-
-
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=8000)
+    return app.response_class(restreamer if request.method == "GET" else "", headers=VIDEO_HEADERS, status=200)
